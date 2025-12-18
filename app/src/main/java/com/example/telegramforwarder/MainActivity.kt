@@ -13,6 +13,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.telegramforwarder.ui.screens.HomeScreen
 import com.example.telegramforwarder.ui.screens.SettingsScreen
+import com.example.telegramforwarder.ui.screens.LogsScreen
 import com.example.telegramforwarder.ui.theme.TelegramForwarderTheme
 
 import androidx.compose.runtime.collectAsState
@@ -45,6 +46,16 @@ fun AppNavigation() {
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = "home") {
         composable("home") { HomeScreen(navController) }
-        composable("settings") { SettingsScreen(navController) }
+        composable("settings") {
+            SettingsScreen(
+                onBack = { navController.popBackStack() },
+                onNavigateToLogs = { navController.navigate("logs") }
+            )
+        }
+        composable("logs") {
+            LogsScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
     }
 }

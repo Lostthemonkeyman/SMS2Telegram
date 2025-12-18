@@ -3,6 +3,7 @@ package com.example.telegramforwarder.data.local
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -17,6 +18,8 @@ class UserPreferences(private val context: Context) {
         val TELEGRAM_BOT_TOKEN = stringPreferencesKey("telegram_bot_token")
         val TELEGRAM_CHAT_ID = stringPreferencesKey("telegram_chat_id")
         val THEME_MODE = stringPreferencesKey("theme_mode") // "system", "light", "dark"
+        val IS_SMS_ENABLED = booleanPreferencesKey("is_sms_enabled")
+        val IS_EMAIL_ENABLED = booleanPreferencesKey("is_email_enabled")
     }
 
     val botToken: Flow<String?> = context.dataStore.data.map { preferences ->
@@ -29,6 +32,14 @@ class UserPreferences(private val context: Context) {
 
     val themeMode: Flow<String> = context.dataStore.data.map { preferences ->
         preferences[THEME_MODE] ?: "system"
+    }
+
+    val isSmsEnabled: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[IS_SMS_ENABLED] ?: true
+    }
+
+    val isEmailEnabled: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[IS_EMAIL_ENABLED] ?: true
     }
 
     suspend fun saveBotToken(token: String) {
@@ -46,6 +57,18 @@ class UserPreferences(private val context: Context) {
     suspend fun saveThemeMode(mode: String) {
         context.dataStore.edit { preferences ->
             preferences[THEME_MODE] = mode
+        }
+    }
+
+    suspend fun setSmsEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[IS_SMS_ENABLED] = enabled
+        }
+    }
+
+    suspend fun setEmailEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[IS_EMAIL_ENABLED] = enabled
         }
     }
 }
