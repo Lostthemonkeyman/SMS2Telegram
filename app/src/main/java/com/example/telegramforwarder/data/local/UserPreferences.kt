@@ -17,6 +17,7 @@ class UserPreferences(private val context: Context) {
     companion object {
         val TELEGRAM_BOT_TOKEN = stringPreferencesKey("telegram_bot_token")
         val TELEGRAM_CHAT_ID = stringPreferencesKey("telegram_chat_id")
+        val GEMINI_API_KEYS = stringPreferencesKey("gemini_api_keys")
         val THEME_MODE = stringPreferencesKey("theme_mode") // "system", "light", "dark"
         val IS_SMS_ENABLED = booleanPreferencesKey("is_sms_enabled")
         val IS_EMAIL_ENABLED = booleanPreferencesKey("is_email_enabled")
@@ -28,6 +29,10 @@ class UserPreferences(private val context: Context) {
 
     val chatId: Flow<String?> = context.dataStore.data.map { preferences ->
         preferences[TELEGRAM_CHAT_ID]
+    }
+
+    val geminiApiKeys: Flow<List<String>> = context.dataStore.data.map { preferences ->
+        preferences[GEMINI_API_KEYS]?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
     }
 
     val themeMode: Flow<String> = context.dataStore.data.map { preferences ->
@@ -51,6 +56,12 @@ class UserPreferences(private val context: Context) {
     suspend fun saveChatId(id: String) {
         context.dataStore.edit { preferences ->
             preferences[TELEGRAM_CHAT_ID] = id
+        }
+    }
+
+    suspend fun saveGeminiKeys(keys: List<String>) {
+        context.dataStore.edit { preferences ->
+            preferences[GEMINI_API_KEYS] = keys.joinToString(",")
         }
     }
 
