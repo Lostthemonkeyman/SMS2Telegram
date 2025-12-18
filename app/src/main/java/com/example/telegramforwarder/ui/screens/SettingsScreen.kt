@@ -349,6 +349,64 @@ fun SettingsScreen(
                     }
                 }
 
+                // --- Appearance ---
+                item {
+                    AnimatedEntry(visibleState, 550) {
+                        SettingsSectionTitle("Appearance")
+                    }
+                }
+
+                item {
+                    AnimatedEntry(visibleState, 580) {
+                        val themeMode by preferences.themeMode.collectAsState(initial = "system")
+                        
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(20.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surface
+                            ),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text(
+                                    "Theme",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+                                
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    ThemeOption(
+                                        title = "System",
+                                        icon = Icons.Default.PhoneAndroid,
+                                        isSelected = themeMode == "system",
+                                        onClick = { scope.launch { preferences.saveThemeMode("system") } },
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    ThemeOption(
+                                        title = "Light",
+                                        icon = Icons.Default.LightMode,
+                                        isSelected = themeMode == "light",
+                                        onClick = { scope.launch { preferences.saveThemeMode("light") } },
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    ThemeOption(
+                                        title = "Dark",
+                                        icon = Icons.Default.DarkMode,
+                                        isSelected = themeMode == "dark",
+                                        onClick = { scope.launch { preferences.saveThemeMode("dark") } },
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
                 // --- Diagnostics ---
                 item {
                     AnimatedEntry(visibleState, 600) {
@@ -524,6 +582,58 @@ fun GeminiKeyItem(index: Int, key: String, onDelete: () -> Unit) {
         )
         IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
             Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
+        }
+    }
+}
+
+@Composable
+fun ThemeOption(
+    title: String,
+    icon: ImageVector,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected) 
+                MaterialTheme.colorScheme.primaryContainer 
+            else 
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        ),
+        border = if (isSelected) 
+            androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary) 
+        else 
+            null
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = title,
+                tint = if (isSelected) 
+                    MaterialTheme.colorScheme.primary 
+                else 
+                    MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(32.dp)
+            )
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                color = if (isSelected) 
+                    MaterialTheme.colorScheme.primary 
+                else 
+                    MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
