@@ -6,7 +6,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-// iOS-inspired typography with San Francisco-like system fonts
+// Standard Material Design typography
 val Typography = Typography(
     // Display styles
     displayLarge = TextStyle(
@@ -31,7 +31,7 @@ val Typography = Typography(
         letterSpacing = 0.sp
     ),
     
-    // Headline styles (iOS Large Titles)
+    // Headline styles
     headlineLarge = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Bold,
