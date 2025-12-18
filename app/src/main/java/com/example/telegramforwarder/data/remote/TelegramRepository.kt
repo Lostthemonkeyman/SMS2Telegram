@@ -13,7 +13,7 @@ object TelegramRepository {
 
     suspend fun sendMessage(botToken: String, chatId: String, message: String): TelegramResponse {
         val retrofit = retrofit2.Retrofit.Builder()
-            .baseUrl("$BASE_URL$botToken/")
+            .baseUrl("${BASE_URL}bot$botToken/")
             .addConverterFactory(retrofit2.converter.gson.GsonConverterFactory.create())
             .build()
 
