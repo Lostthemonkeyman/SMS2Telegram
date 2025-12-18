@@ -92,8 +92,7 @@ fun LogsScreen(
                     titleContentColor = MaterialTheme.colorScheme.onBackground,
                     actionIconContentColor = MaterialTheme.colorScheme.primary,
                     navigationIconContentColor = MaterialTheme.colorScheme.primary
-                ),
-                modifier = Modifier.statusBarsPadding()
+                )
             )
         }
     ) { padding ->

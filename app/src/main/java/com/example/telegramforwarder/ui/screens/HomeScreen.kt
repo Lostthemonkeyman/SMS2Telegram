@@ -99,12 +99,6 @@ fun HomeScreen(
         )
     }
 
-    var hasNotificationPermission by remember {
-        mutableStateOf(
-            Settings.Secure.getString(context.contentResolver, "enabled_notification_listeners")?.contains(context.packageName) == true
-        )
-    }
-
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions(),
         onResult = { perms ->
@@ -170,57 +164,6 @@ fun HomeScreen(
             Column(
                 modifier = Modifier.fillMaxSize()
             ) {
-                // Permission Warning Card
-                AnimatedVisibility(
-                    visible = !hasNotificationPermission,
-                    enter = fadeIn() + slideInVertically()
-                ) {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.errorContainer
-                        ),
-                        shape = RoundedCornerShape(16.dp)
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Warning,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onErrorContainer
-                            )
-                            Text(
-                                "Notification Access Required",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onErrorContainer
-                            )
-                            Text(
-                                "To forward emails and other notifications, please grant access.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                textAlign = TextAlign.Center,
-                                color = MaterialTheme.colorScheme.onErrorContainer
-                            )
-                            Button(
-                                onClick = {
-                                    val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
-                                    context.startActivity(intent)
-                                },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.onError
-                                ),
-                                modifier = Modifier.padding(top = 8.dp)
-                            ) {
-                                Text("Enable Access", color = MaterialTheme.colorScheme.error)
-                            }
-                        }
-                    }
-                }
-
                 // Search Bar
                 if (allMessages.isNotEmpty()) {
                     AnimatedVisibility(
@@ -328,7 +271,7 @@ fun HomeScreen(
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    text = "Incoming SMS and notifications\nwill appear here",
+                                    text = "Incoming SMS\nwill appear here",
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     textAlign = TextAlign.Center,
