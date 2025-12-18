@@ -94,9 +94,17 @@ fun PermissionWrapper(content: @Composable () -> Unit) {
                  context.startService(intent)
              }
         } else {
-            // Show rationale? For now just proceed but features might break
+            // Show snackbar about missing permissions
+            scope.launch {
+                snackbarHostState.showSnackbar(
+                    message = "Some permissions were denied. App features may be limited.",
+                    duration = androidx.compose.material3.SnackbarDuration.Long
+                )
+            }
         }
     }
+
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         launcher.launch(permissions.toTypedArray())
