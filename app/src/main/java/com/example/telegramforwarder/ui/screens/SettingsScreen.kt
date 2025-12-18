@@ -1,14 +1,16 @@
 package com.example.telegramforwarder.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -28,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.telegramforwarder.data.local.UserPreferences
+import com.example.telegramforwarder.data.remote.TelegramRepository
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -39,6 +42,7 @@ fun SettingsScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val preferences = remember { UserPreferences(context) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     val botToken by preferences.botToken.collectAsState(initial = "")
     val chatId by preferences.chatId.collectAsState(initial = "")
@@ -47,13 +51,21 @@ fun SettingsScreen(
 
     var tokenInput by remember { mutableStateOf("") }
     var chatInput by remember { mutableStateOf("") }
+    var isTestingConnection by remember { mutableStateOf(false) }
 
+    // Initialize inputs with stored values
     LaunchedEffect(botToken, chatId) {
         if (botToken != null) tokenInput = botToken!!
         if (chatId != null) chatInput = chatId!!
     }
 
+    // Animation state
+    val visibleState = remember {
+        MutableTransitionState(false).apply { targetState = true }
+    }
+
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Settings", fontWeight = FontWeight.Bold) },
@@ -88,107 +100,181 @@ fun SettingsScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 item {
-                    SettingsSectionTitle("Forwarding Options")
-                }
-
-                item {
-                    SettingsSwitchCard(
-                        title = "Forward SMS",
-                        subtitle = "Intercept and forward incoming SMS messages",
-                        checked = isSmsEnabled,
-                        onCheckedChange = { scope.launch { preferences.setSmsEnabled(it) } }
-                    )
-                }
-
-                item {
-                    SettingsSwitchCard(
-                        title = "Forward Emails",
-                        subtitle = "Intercept and forward Gmail notifications",
-                        checked = isEmailEnabled,
-                        onCheckedChange = { scope.launch { preferences.setEmailEnabled(it) } }
-                    )
-                }
-
-                item {
-                    SettingsSectionTitle("Telegram Configuration")
-                }
-
-                item {
-                    BeautifulTextField(
-                        value = tokenInput,
-                        onValueChange = { tokenInput = it },
-                        label = "Bot Token"
-                    )
-                }
-
-                item {
-                    BeautifulTextField(
-                        value = chatInput,
-                        onValueChange = { chatInput = it },
-                        label = "Chat ID"
-                    )
-                }
-
-                item {
-                    Button(
-                        onClick = {
-                            scope.launch {
-                                preferences.saveBotToken(tokenInput)
-                                preferences.saveChatId(chatInput)
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary
-                        )
+                    AnimatedVisibility(
+                        visibleState = visibleState,
+                        enter = slideInHorizontally(animationSpec = tween(300)) + fadeIn()
                     ) {
-                        Text("Save Configuration", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                        SettingsSectionTitle("Forwarding Options")
                     }
                 }
 
                 item {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    SettingsSectionTitle("Diagnostics")
+                    AnimatedVisibility(
+                        visibleState = visibleState,
+                        enter = slideInHorizontally(animationSpec = tween(300, delayMillis = 100)) + fadeIn()
+                    ) {
+                        SettingsSwitchCard(
+                            title = "Forward SMS",
+                            subtitle = "Intercept and forward incoming SMS messages",
+                            checked = isSmsEnabled,
+                            onCheckedChange = { scope.launch { preferences.setSmsEnabled(it) } }
+                        )
+                    }
                 }
 
                 item {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onNavigateToLogs() },
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer
-                        )
+                    AnimatedVisibility(
+                        visibleState = visibleState,
+                        enter = slideInHorizontally(animationSpec = tween(300, delayMillis = 200)) + fadeIn()
                     ) {
-                        Row(
+                        SettingsSwitchCard(
+                            title = "Forward Emails",
+                            subtitle = "Intercept and forward Gmail notifications",
+                            checked = isEmailEnabled,
+                            onCheckedChange = { scope.launch { preferences.setEmailEnabled(it) } }
+                        )
+                    }
+                }
+
+                item {
+                    AnimatedVisibility(
+                        visibleState = visibleState,
+                        enter = slideInHorizontally(animationSpec = tween(300, delayMillis = 300)) + fadeIn()
+                    ) {
+                        SettingsSectionTitle("Telegram Configuration")
+                    }
+                }
+
+                item {
+                    AnimatedVisibility(
+                        visibleState = visibleState,
+                        enter = slideInHorizontally(animationSpec = tween(300, delayMillis = 400)) + fadeIn()
+                    ) {
+                        BeautifulTextField(
+                            value = tokenInput,
+                            onValueChange = { tokenInput = it },
+                            label = "Bot Token"
+                        )
+                    }
+                }
+
+                item {
+                    AnimatedVisibility(
+                        visibleState = visibleState,
+                        enter = slideInHorizontally(animationSpec = tween(300, delayMillis = 500)) + fadeIn()
+                    ) {
+                        BeautifulTextField(
+                            value = chatInput,
+                            onValueChange = { chatInput = it },
+                            label = "Chat ID"
+                        )
+                    }
+                }
+
+                item {
+                    AnimatedVisibility(
+                        visibleState = visibleState,
+                        enter = slideInVertically(animationSpec = tween(300, delayMillis = 600)) + fadeIn()
+                    ) {
+                        Button(
+                            onClick = {
+                                scope.launch {
+                                    // Save credentials
+                                    preferences.saveBotToken(tokenInput)
+                                    preferences.saveChatId(chatInput)
+
+                                    // Verify connection
+                                    isTestingConnection = true
+                                    val response = TelegramRepository.sendMessage(
+                                        botToken = tokenInput.trim(),
+                                        chatId = chatInput.trim(),
+                                        message = "DONE" // As requested by user
+                                    )
+                                    isTestingConnection = false
+
+                                    if (response.success) {
+                                        snackbarHostState.showSnackbar("Configuration saved & Connection verified!")
+                                    } else {
+                                        snackbarHostState.showSnackbar("Saved, but failed to connect: ${response.message}")
+                                    }
+                                }
+                            },
+                            enabled = !isTestingConnection,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(20.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                                .height(56.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
                         ) {
-                            Column {
-                                Text(
-                                    "View System Logs",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                            if (isTestingConnection) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    strokeWidth = 2.dp
                                 )
-                                Text(
-                                    "Check for errors and connection issues",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Verifying...", fontSize = 16.sp)
+                            } else {
+                                Text("Save & Verify", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                            }
+                        }
+                    }
+                }
+
+                item {
+                    AnimatedVisibility(
+                        visibleState = visibleState,
+                        enter = slideInVertically(animationSpec = tween(300, delayMillis = 700)) + fadeIn()
+                    ) {
+                        Column {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            SettingsSectionTitle("Diagnostics")
+                        }
+                    }
+                }
+
+                item {
+                    AnimatedVisibility(
+                        visibleState = visibleState,
+                        enter = slideInVertically(animationSpec = tween(300, delayMillis = 800)) + fadeIn()
+                    ) {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onNavigateToLogs() },
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(20.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column {
+                                    Text(
+                                        "View System Logs",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                                    )
+                                    Text(
+                                        "Check for errors and connection issues",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                                    )
+                                }
+                                Icon(
+                                    Icons.Default.Info,
+                                    contentDescription = "Logs",
+                                    tint = MaterialTheme.colorScheme.onSecondaryContainer
                                 )
                             }
-                            Icon(
-                                Icons.Default.Info,
-                                contentDescription = "Logs",
-                                tint = MaterialTheme.colorScheme.onSecondaryContainer
-                            )
                         }
                     }
                 }

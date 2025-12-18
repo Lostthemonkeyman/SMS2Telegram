@@ -11,6 +11,8 @@ import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
@@ -24,7 +26,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
@@ -47,7 +49,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -85,6 +86,11 @@ fun HomeScreen(
             hasSmsPermission = perms[Manifest.permission.RECEIVE_SMS] == true
         }
     )
+
+    // Animation state
+    val visibleState = remember {
+        MutableTransitionState(false).apply { targetState = true }
+    }
 
     LaunchedEffect(Unit) {
         if (!hasSmsPermission) {
@@ -193,38 +199,57 @@ fun HomeScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Notifications,
-                            contentDescription = null,
-                            modifier = Modifier
-                                .size(80.dp)
-                                .padding(bottom = 16.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
-                        )
-                        Text(
-                            text = "No messages intercepted yet",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                            fontWeight = FontWeight.Medium
-                        )
-                        Text(
-                            text = "Incoming SMS and Emails will appear here",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                        )
+                        AnimatedVisibility(
+                            visibleState = visibleState,
+                            enter = fadeIn(animationSpec = tween(500)) + slideInVertically(initialOffsetY = { 50 })
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(
+                                    imageVector = Icons.Default.Notifications,
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .size(80.dp)
+                                        .padding(bottom = 16.dp),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                                )
+                                Text(
+                                    text = "No messages intercepted yet",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Text(
+                                    text = "Incoming SMS and Emails will appear here",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                )
+                            }
+                        }
                     }
                 } else {
                     LazyColumn(
                         contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        items(messages) { message ->
-                            MessageItem(
-                                sender = message.sender,
-                                content = message.content,
-                                timestamp = message.timestamp,
-                                type = message.type
-                            )
+                        itemsIndexed(messages) { index, message ->
+                            // Staggered animation for list items
+                            AnimatedVisibility(
+                                visibleState = visibleState,
+                                enter = slideInVertically(
+                                    animationSpec = tween(
+                                        durationMillis = 300,
+                                        delayMillis = index * 50 // Stagger by 50ms
+                                    ),
+                                    initialOffsetY = { 50 }
+                                ) + fadeIn(animationSpec = tween(300))
+                            ) {
+                                MessageItem(
+                                    sender = message.sender,
+                                    content = message.content,
+                                    timestamp = message.timestamp,
+                                    type = message.type
+                                )
+                            }
                         }
                     }
                 }
