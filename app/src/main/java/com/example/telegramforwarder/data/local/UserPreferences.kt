@@ -21,7 +21,6 @@ class UserPreferences(private val context: Context) {
         val GEMINI_API_KEYS = stringPreferencesKey("gemini_api_keys")
         val THEME_MODE = stringPreferencesKey("theme_mode") // "system", "light", "dark"
         val IS_SMS_ENABLED = booleanPreferencesKey("is_sms_enabled")
-        val IS_EMAIL_ENABLED = booleanPreferencesKey("is_email_enabled")
 
         // New features
         val IS_MISSED_CALL_ENABLED = booleanPreferencesKey("is_missed_call_enabled")
@@ -49,10 +48,6 @@ class UserPreferences(private val context: Context) {
 
     val isSmsEnabled: Flow<Boolean> = context.dataStore.data.map { preferences ->
         preferences[IS_SMS_ENABLED] ?: true
-    }
-
-    val isEmailEnabled: Flow<Boolean> = context.dataStore.data.map { preferences ->
-        preferences[IS_EMAIL_ENABLED] ?: true
     }
 
     val isMissedCallEnabled: Flow<Boolean> = context.dataStore.data.map { preferences ->
@@ -102,12 +97,6 @@ class UserPreferences(private val context: Context) {
     suspend fun setSmsEnabled(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[IS_SMS_ENABLED] = enabled
-        }
-    }
-
-    suspend fun setEmailEnabled(enabled: Boolean) {
-        context.dataStore.edit { preferences ->
-            preferences[IS_EMAIL_ENABLED] = enabled
         }
     }
 

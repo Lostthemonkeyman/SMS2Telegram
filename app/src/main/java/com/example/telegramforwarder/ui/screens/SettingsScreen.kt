@@ -53,7 +53,6 @@ fun SettingsScreen(
     val chatId by preferences.chatId.collectAsState(initial = "")
     val geminiApiKeys by preferences.geminiApiKeys.collectAsState(initial = emptyList())
     val isSmsEnabled by preferences.isSmsEnabled.collectAsState(initial = true)
-    val isEmailEnabled by preferences.isEmailEnabled.collectAsState(initial = true)
 
     // New Features
     val isMissedCallEnabled by preferences.isMissedCallEnabled.collectAsState(initial = false)
@@ -135,13 +134,6 @@ fun SettingsScreen(
                                 icon = Icons.Default.Sms,
                                 checked = isSmsEnabled,
                                 onCheckedChange = { scope.launch { preferences.setSmsEnabled(it) } }
-                            )
-                            SettingsSwitchCard(
-                                title = "Forward Emails",
-                                subtitle = "Intercept and forward Gmail notifications",
-                                icon = Icons.Default.Email,
-                                checked = isEmailEnabled,
-                                onCheckedChange = { scope.launch { preferences.setEmailEnabled(it) } }
                             )
                              SettingsSwitchCard(
                                 title = "Missed Call Notifications",
@@ -411,69 +403,6 @@ fun SettingsScreen(
                                         icon = Icons.Default.DarkMode,
                                         isSelected = themeMode == "dark",
                                         onClick = { scope.launch { preferences.saveThemeMode("dark") } },
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // --- Statistics ---
-                item {
-                    AnimatedEntry(visibleState, 575) {
-                        SettingsSectionTitle("Statistics")
-                    }
-                }
-
-                item {
-                    AnimatedEntry(visibleState, 590) {
-                        val database = remember { com.example.telegramforwarder.data.local.AppDatabase.getDatabase(context) }
-                        val totalMessages by database.messageDao().getMessageCount().collectAsState(initial = 0)
-                        val smsCount by database.messageDao().getMessageCountByType("SMS").collectAsState(initial = 0)
-                        val emailCount by database.messageDao().getMessageCountByType("EMAIL").collectAsState(initial = 0)
-                        
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(20.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.3f)
-                            ),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(20.dp),
-                                verticalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                Text(
-                                    "Message Statistics",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                ) {
-                                    StatisticCard(
-                                        label = "Total",
-                                        value = totalMessages.toString(),
-                                        icon = Icons.Default.Message,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    StatisticCard(
-                                        label = "SMS",
-                                        value = smsCount.toString(),
-                                        icon = Icons.Default.Sms,
-                                        color = MaterialTheme.colorScheme.secondary,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    StatisticCard(
-                                        label = "Email",
-                                        value = emailCount.toString(),
-                                        icon = Icons.Default.Email,
-                                        color = MaterialTheme.colorScheme.tertiary,
                                         modifier = Modifier.weight(1f)
                                     )
                                 }
@@ -795,53 +724,3 @@ fun ThemeOption(
     }
 }
 
-@Composable
-fun StatisticCard(
-    label: String,
-    value: String,
-    icon: ImageVector,
-    color: Color,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .background(color.copy(alpha = 0.2f), CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = label,
-                    tint = color,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-            Text(
-                text = value,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                color = color
-            )
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
