@@ -133,7 +133,7 @@ fun HomeScreen(
                     Brush.verticalGradient(
                         colors = listOf(
                             MaterialTheme.colorScheme.surface,
-                            MaterialTheme.colorScheme.surfaceContainer
+                            MaterialTheme.colorScheme.surfaceVariant
                         )
                     )
                 )
