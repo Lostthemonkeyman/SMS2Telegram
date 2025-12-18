@@ -66,7 +66,6 @@ A beautiful, intelligent Android application that forwards SMS messages, emails,
 ### Basic Forwarding
 Once configured, the app automatically forwards:
 - Incoming SMS messages
-- Gmail notifications
 - Missed call alerts (if enabled)
 - Battery status changes (if enabled)
 
