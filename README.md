@@ -6,7 +6,6 @@ A beautiful, intelligent Android application that forwards SMS messages, emails,
 
 ### 📱 Message Forwarding
 - **SMS Forwarding**: Automatically forward incoming SMS to your Telegram chat
-- **Email Notifications**: Forward Gmail notifications to Telegram
 - **Missed Call Alerts**: Get notified about missed or rejected calls
 - **Contact Integration**: Display contact names with phone numbers
 
