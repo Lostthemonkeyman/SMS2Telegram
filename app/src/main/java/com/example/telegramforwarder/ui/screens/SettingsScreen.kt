@@ -1,32 +1,31 @@
 package com.example.telegramforwarder.ui.screens
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.MutableTransitionState
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.telegramforwarder.data.local.UserPreferences
@@ -46,11 +45,13 @@ fun SettingsScreen(
 
     val botToken by preferences.botToken.collectAsState(initial = "")
     val chatId by preferences.chatId.collectAsState(initial = "")
+    val geminiApiKeys by preferences.geminiApiKeys.collectAsState(initial = emptyList())
     val isSmsEnabled by preferences.isSmsEnabled.collectAsState(initial = true)
     val isEmailEnabled by preferences.isEmailEnabled.collectAsState(initial = true)
 
     var tokenInput by remember { mutableStateOf("") }
     var chatInput by remember { mutableStateOf("") }
+    var newGeminiKeyInput by remember { mutableStateOf("") }
     var isTestingConnection by remember { mutableStateOf(false) }
 
     // Initialize inputs with stored values
@@ -76,9 +77,12 @@ fun SettingsScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.Transparent
-                )
+                ),
+                modifier = Modifier.statusBarsPadding()
             )
-        }
+        },
+        // Handle keyboard overlap
+        contentWindowInsets = WindowInsets.ime
     ) { padding ->
         Box(
             modifier = Modifier
@@ -96,106 +100,158 @@ fun SettingsScreen(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(horizontal = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp),
+                contentPadding = PaddingValues(bottom = 80.dp) // Extra padding for scroll
             ) {
+                // --- Forwarding Options ---
                 item {
-                    AnimatedVisibility(
-                        visibleState = visibleState,
-                        enter = slideInHorizontally(animationSpec = tween(300)) + fadeIn()
-                    ) {
+                    AnimatedEntry(visibleState, 0) {
                         SettingsSectionTitle("Forwarding Options")
                     }
                 }
 
                 item {
-                    AnimatedVisibility(
-                        visibleState = visibleState,
-                        enter = slideInHorizontally(animationSpec = tween(300, delayMillis = 100)) + fadeIn()
-                    ) {
-                        SettingsSwitchCard(
-                            title = "Forward SMS",
-                            subtitle = "Intercept and forward incoming SMS messages",
-                            checked = isSmsEnabled,
-                            onCheckedChange = { scope.launch { preferences.setSmsEnabled(it) } }
-                        )
+                    AnimatedEntry(visibleState, 100) {
+                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            SettingsSwitchCard(
+                                title = "Forward SMS",
+                                subtitle = "Intercept and forward incoming SMS",
+                                icon = Icons.Default.Sms,
+                                checked = isSmsEnabled,
+                                onCheckedChange = { scope.launch { preferences.setSmsEnabled(it) } }
+                            )
+                            SettingsSwitchCard(
+                                title = "Forward Emails",
+                                subtitle = "Intercept and forward Gmail notifications",
+                                icon = Icons.Default.Email,
+                                checked = isEmailEnabled,
+                                onCheckedChange = { scope.launch { preferences.setEmailEnabled(it) } }
+                            )
+                        }
+                    }
+                }
+
+                // --- Gemini Configuration ---
+                item {
+                    AnimatedEntry(visibleState, 200) {
+                        SettingsSectionTitle("Gemini AI Configuration")
                     }
                 }
 
                 item {
-                    AnimatedVisibility(
-                        visibleState = visibleState,
-                        enter = slideInHorizontally(animationSpec = tween(300, delayMillis = 200)) + fadeIn()
-                    ) {
-                        SettingsSwitchCard(
-                            title = "Forward Emails",
-                            subtitle = "Intercept and forward Gmail notifications",
-                            checked = isEmailEnabled,
-                            onCheckedChange = { scope.launch { preferences.setEmailEnabled(it) } }
-                        )
+                    AnimatedEntry(visibleState, 250) {
+                        Card(
+                            shape = RoundedCornerShape(20.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text(
+                                    "API Keys",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    "Add multiple keys for redundancy. The system will rotate through them if one fails.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                // List of existing keys
+                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    geminiApiKeys.forEachIndexed { index, key ->
+                                        GeminiKeyItem(
+                                            index = index,
+                                            key = key,
+                                            onDelete = {
+                                                val newList = geminiApiKeys.toMutableList().apply { removeAt(index) }
+                                                scope.launch { preferences.saveGeminiKeys(newList) }
+                                            }
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                // Add new key
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    BeautifulTextField(
+                                        value = newGeminiKeyInput,
+                                        onValueChange = { newGeminiKeyInput = it },
+                                        label = "New Gemini API Key",
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    IconButton(
+                                        onClick = {
+                                            if (newGeminiKeyInput.isNotBlank()) {
+                                                val newList = geminiApiKeys + newGeminiKeyInput.trim()
+                                                scope.launch { preferences.saveGeminiKeys(newList) }
+                                                newGeminiKeyInput = ""
+                                            }
+                                        },
+                                        modifier = Modifier
+                                            .background(MaterialTheme.colorScheme.primary, CircleShape)
+                                            .size(48.dp)
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Add,
+                                            contentDescription = "Add",
+                                            tint = MaterialTheme.colorScheme.onPrimary
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
 
+                // --- Telegram Configuration ---
                 item {
-                    AnimatedVisibility(
-                        visibleState = visibleState,
-                        enter = slideInHorizontally(animationSpec = tween(300, delayMillis = 300)) + fadeIn()
-                    ) {
+                    AnimatedEntry(visibleState, 300) {
                         SettingsSectionTitle("Telegram Configuration")
                     }
                 }
 
                 item {
-                    AnimatedVisibility(
-                        visibleState = visibleState,
-                        enter = slideInHorizontally(animationSpec = tween(300, delayMillis = 400)) + fadeIn()
-                    ) {
-                        BeautifulTextField(
-                            value = tokenInput,
-                            onValueChange = { tokenInput = it },
-                            label = "Bot Token"
-                        )
+                    AnimatedEntry(visibleState, 400) {
+                        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            BeautifulTextField(
+                                value = tokenInput,
+                                onValueChange = { tokenInput = it },
+                                label = "Bot Token"
+                            )
+                            BeautifulTextField(
+                                value = chatInput,
+                                onValueChange = { chatInput = it },
+                                label = "Chat ID"
+                            )
+                        }
                     }
                 }
 
                 item {
-                    AnimatedVisibility(
-                        visibleState = visibleState,
-                        enter = slideInHorizontally(animationSpec = tween(300, delayMillis = 500)) + fadeIn()
-                    ) {
-                        BeautifulTextField(
-                            value = chatInput,
-                            onValueChange = { chatInput = it },
-                            label = "Chat ID"
-                        )
-                    }
-                }
-
-                item {
-                    AnimatedVisibility(
-                        visibleState = visibleState,
-                        enter = slideInVertically(animationSpec = tween(300, delayMillis = 600)) + fadeIn()
-                    ) {
+                    AnimatedEntry(visibleState, 500) {
                         Button(
                             onClick = {
                                 scope.launch {
-                                    // Save credentials
                                     preferences.saveBotToken(tokenInput)
                                     preferences.saveChatId(chatInput)
 
-                                    // Verify connection
                                     isTestingConnection = true
                                     val response = TelegramRepository.sendMessage(
                                         botToken = tokenInput.trim(),
                                         chatId = chatInput.trim(),
-                                        message = "DONE" // As requested by user
+                                        message = "DONE"
                                     )
                                     isTestingConnection = false
 
                                     if (response.success) {
-                                        snackbarHostState.showSnackbar("Configuration saved & Connection verified!")
+                                        snackbarHostState.showSnackbar("Saved & Verified!")
                                     } else {
-                                        snackbarHostState.showSnackbar("Saved, but failed to connect: ${response.message}")
+                                        snackbarHostState.showSnackbar("Failed: ${response.message}")
                                     }
                                 }
                             },
@@ -214,73 +270,53 @@ fun SettingsScreen(
                                     color = MaterialTheme.colorScheme.onPrimary,
                                     strokeWidth = 2.dp
                                 )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("Verifying...", fontSize = 16.sp)
                             } else {
-                                Text("Save & Verify", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                                Text("Save & Verify Connection", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
                 }
 
+                // --- Diagnostics ---
                 item {
-                    AnimatedVisibility(
-                        visibleState = visibleState,
-                        enter = slideInVertically(animationSpec = tween(300, delayMillis = 700)) + fadeIn()
-                    ) {
-                        Column {
-                            Spacer(modifier = Modifier.height(16.dp))
-                            SettingsSectionTitle("Diagnostics")
-                        }
+                    AnimatedEntry(visibleState, 600) {
+                        SettingsSectionTitle("Diagnostics")
                     }
                 }
 
                 item {
-                    AnimatedVisibility(
-                        visibleState = visibleState,
-                        enter = slideInVertically(animationSpec = tween(300, delayMillis = 800)) + fadeIn()
-                    ) {
+                    AnimatedEntry(visibleState, 700) {
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable { onNavigateToLogs() },
-                            shape = RoundedCornerShape(16.dp),
+                            shape = RoundedCornerShape(20.dp),
                             colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.secondaryContainer
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
                             )
                         ) {
                             Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(20.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
+                                modifier = Modifier.padding(20.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Column {
-                                    Text(
-                                        "View System Logs",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                                    )
-                                    Text(
-                                        "Check for errors and connection issues",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
-                                    )
+                                Box(
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .background(MaterialTheme.colorScheme.secondary, CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(Icons.Default.Notes, contentDescription = null, tint = Color.White)
                                 }
-                                Icon(
-                                    Icons.Default.Info,
-                                    contentDescription = "Logs",
-                                    tint = MaterialTheme.colorScheme.onSecondaryContainer
-                                )
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Column {
+                                    Text("System Logs", fontWeight = FontWeight.Bold)
+                                    Text("View debugging logs", style = MaterialTheme.typography.bodySmall)
+                                }
+                                Spacer(modifier = Modifier.weight(1f))
+                                Icon(Icons.Default.ChevronRight, contentDescription = null)
                             }
                         }
                     }
-                }
-
-                item {
-                    Spacer(modifier = Modifier.height(32.dp))
                 }
             }
         }
@@ -288,12 +324,30 @@ fun SettingsScreen(
 }
 
 @Composable
+fun AnimatedEntry(
+    visibleState: MutableTransitionState<Boolean>,
+    delay: Int,
+    content: @Composable () -> Unit
+) {
+    AnimatedVisibility(
+        visibleState = visibleState,
+        enter = slideInVertically(
+            initialOffsetY = { 50 },
+            animationSpec = tween(500, delayMillis = delay, easing = FastOutSlowInEasing)
+        ) + fadeIn(animationSpec = tween(500, delayMillis = delay)),
+        content = { content() }
+    )
+}
+
+@Composable
 fun SettingsSectionTitle(title: String) {
     Text(
-        text = title,
-        style = MaterialTheme.typography.labelLarge,
+        text = title.uppercase(),
+        style = MaterialTheme.typography.labelMedium,
         color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(vertical = 8.dp)
+        fontWeight = FontWeight.Bold,
+        letterSpacing = 1.sp,
+        modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp)
     )
 }
 
@@ -301,52 +355,45 @@ fun SettingsSectionTitle(title: String) {
 fun SettingsSwitchCard(
     title: String,
     subtitle: String,
+    icon: ImageVector,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
-    val scale by animateFloatAsState(
-        targetValue = if (checked) 1.02f else 1f,
-        animationSpec = spring(stiffness = Spring.StiffnessLow),
-        label = "scale"
-    )
-
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .scale(scale),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (checked) 4.dp else 1.dp),
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (checked) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        )
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(
+                        if (checked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                        CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = if (checked) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                Spacer(modifier = Modifier.height(4.dp))
+                Text(text = title, fontWeight = FontWeight.SemiBold)
                 Text(text = subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            Switch(
-                checked = checked,
-                onCheckedChange = onCheckedChange,
-                thumbContent = if (checked) {
-                    {
-                        Icon(
-                            imageVector = Icons.Filled.Check,
-                            contentDescription = null,
-                            modifier = Modifier.size(SwitchDefaults.IconSize),
-                        )
-                    }
-                } else {
-                    null
-                }
-            )
+            Switch(checked = checked, onCheckedChange = onCheckedChange)
         }
     }
 }
@@ -356,18 +403,55 @@ fun SettingsSwitchCard(
 fun BeautifulTextField(
     value: String,
     onValueChange: (String) -> Unit,
-    label: String
+    label: String,
+    modifier: Modifier = Modifier
 ) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         label = { Text(label) },
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
         colors = TextFieldDefaults.outlinedTextFieldColors(
             focusedBorderColor = MaterialTheme.colorScheme.primary,
-            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+            containerColor = MaterialTheme.colorScheme.surface
         ),
-        singleLine = true
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
     )
+}
+
+@Composable
+fun GeminiKeyItem(index: Int, key: String, onDelete: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(24.dp)
+                .background(MaterialTheme.colorScheme.secondary, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "${index + 1}",
+                color = Color.White,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(
+            text = "•••• " + key.takeLast(4),
+            modifier = Modifier.weight(1f),
+            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
+        )
+        IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
+            Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
+        }
+    }
 }

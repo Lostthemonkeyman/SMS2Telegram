@@ -8,6 +8,7 @@ import com.example.telegramforwarder.data.LogRepository
 import com.example.telegramforwarder.data.local.AppDatabase
 import com.example.telegramforwarder.data.local.MessageEntity
 import com.example.telegramforwarder.data.local.UserPreferences
+import com.example.telegramforwarder.data.remote.GeminiRepository
 import com.example.telegramforwarder.data.remote.TelegramRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -54,6 +55,14 @@ class SmsReceiver : BroadcastReceiver() {
         }
     }
 
+    private fun escapeHtml(text: String): String {
+        return text.replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace("\"", "&quot;")
+            .replace("'", "&#39;")
+    }
+
     private suspend fun processIncomingMessage(
         context: Context,
         sender: String,
@@ -84,7 +93,37 @@ class SmsReceiver : BroadcastReceiver() {
         val chatId = preferences.chatId.first()
 
         if (!botToken.isNullOrEmpty() && !chatId.isNullOrEmpty()) {
-            val formattedMessage = "📩 *New $type*\n\n*From:* $sender\n\n$content"
+            val sb = StringBuilder()
+
+            // Check for verification code using Gemini if it's an SMS
+            if (type.equals("SMS", ignoreCase = true)) {
+                val geminiKeys = preferences.geminiApiKeys.first()
+                if (geminiKeys.isNotEmpty()) {
+                    val geminiRepo = GeminiRepository(logger)
+                    val code = geminiRepo.checkMessageForCode(content, geminiKeys)
+
+                    if (code != null) {
+                        logger.logInfo("SmsReceiver", "Gemini found code: $code")
+                        sb.append("<b>Verification code by AI:</b>\n")
+                        sb.append("<code>$code</code>\n\n")
+                    } else {
+                        logger.logInfo("SmsReceiver", "Gemini did not find a code.")
+                    }
+                } else {
+                    logger.logInfo("SmsReceiver", "No Gemini keys found, skipping AI check.")
+                }
+            }
+
+            // Construct HTML message
+            val safeSender = escapeHtml(sender)
+            val safeContent = escapeHtml(content)
+
+            sb.append("📩 <b>New $type</b>\n\n")
+            sb.append("<b>From:</b> $safeSender\n\n")
+            sb.append(safeContent)
+
+            val formattedMessage = sb.toString()
+
             logger.logInfo("SmsReceiver", "Attempting to send to Telegram (ChatID: $chatId)")
 
             val result = TelegramRepository.sendMessage(botToken, chatId, formattedMessage)

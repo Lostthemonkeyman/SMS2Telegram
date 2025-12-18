@@ -7,6 +7,7 @@ interface TelegramApi {
     @GET("sendMessage")
     suspend fun sendMessage(
         @Query("chat_id") chatId: String,
-        @Query("text") text: String
+        @Query("text") text: String,
+        @Query("parse_mode") parseMode: String = "HTML"
     ): Any // We don't strictly need the response for this fire-and-forget logic
 }
