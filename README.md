@@ -113,17 +113,3 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 This project is open source and available under the MIT License.
 
-## 🙏 Acknowledgments
-
-- Telegram Bot API
-- Google Gemini AI
-- Material Design Team
-- Android Jetpack Compose Team
-
-## 📧 Support
-
-For issues, questions, or suggestions, please open an issue on GitHub.
-
----
-
-Made with ❤️ for the Android community
