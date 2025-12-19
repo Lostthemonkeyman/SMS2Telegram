@@ -25,6 +25,7 @@ class UserPreferences(private val context: Context) {
         // New features
         val IS_MISSED_CALL_ENABLED = booleanPreferencesKey("is_missed_call_enabled")
         val IS_BATTERY_NOTIFY_ENABLED = booleanPreferencesKey("is_battery_notify_enabled")
+        val IS_ENHANCED_BATTERY_ALERTS_ENABLED = booleanPreferencesKey("is_enhanced_battery_alerts_enabled")
         val BATTERY_LOW_THRESHOLD = floatPreferencesKey("battery_low_threshold")
         val BATTERY_HIGH_THRESHOLD = floatPreferencesKey("battery_high_threshold")
         val IS_BOT_POLLING_ENABLED = booleanPreferencesKey("is_bot_polling_enabled")
@@ -56,6 +57,10 @@ class UserPreferences(private val context: Context) {
 
     val isBatteryNotifyEnabled: Flow<Boolean> = context.dataStore.data.map { preferences ->
         preferences[IS_BATTERY_NOTIFY_ENABLED] ?: false
+    }
+
+    val isEnhancedBatteryAlertsEnabled: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[IS_ENHANCED_BATTERY_ALERTS_ENABLED] ?: true
     }
 
     val batteryLowThreshold: Flow<Float> = context.dataStore.data.map { preferences ->
@@ -109,6 +114,12 @@ class UserPreferences(private val context: Context) {
     suspend fun setBatteryNotifyEnabled(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[IS_BATTERY_NOTIFY_ENABLED] = enabled
+        }
+    }
+
+    suspend fun setEnhancedBatteryAlertsEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[IS_ENHANCED_BATTERY_ALERTS_ENABLED] = enabled
         }
     }
 

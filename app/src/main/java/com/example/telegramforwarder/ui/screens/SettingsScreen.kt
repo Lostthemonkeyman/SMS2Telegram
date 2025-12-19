@@ -46,6 +46,7 @@ fun SettingsScreen(
     // New Features
     val isMissedCallEnabled by preferences.isMissedCallEnabled.collectAsState(initial = false)
     val isBatteryNotifyEnabled by preferences.isBatteryNotifyEnabled.collectAsState(initial = false)
+    val isEnhancedBatteryAlertsEnabled by preferences.isEnhancedBatteryAlertsEnabled.collectAsState(initial = true)
     val batteryLowThreshold by preferences.batteryLowThreshold.collectAsState(initial = 20f)
     val batteryHighThreshold by preferences.batteryHighThreshold.collectAsState(initial = 90f)
     val isBotPollingEnabled by preferences.isBotPollingEnabled.collectAsState(initial = false)
@@ -64,13 +65,16 @@ fun SettingsScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            TopAppBar(
-                title = { Text("Settings", fontWeight = FontWeight.Bold) },
+            androidx.compose.material3.CenterAlignedTopAppBar(
+                title = { Text("Settings", fontWeight = FontWeight.SemiBold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
+                )
             )
         },
         // Handle keyboard overlap
@@ -125,6 +129,14 @@ fun SettingsScreen(
                         )
 
                         if (isBatteryNotifyEnabled) {
+                            SettingsSwitchCard(
+                                title = "Enhanced Battery Alerts",
+                                subtitle = "Notify at 90, 95, 100% (charging) and 20, 15, 10, 5% (discharging).",
+                                icon = Icons.Default.BatteryFull,
+                                checked = isEnhancedBatteryAlertsEnabled,
+                                onCheckedChange = { scope.launch { preferences.setEnhancedBatteryAlertsEnabled(it) } }
+                            )
+
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(12.dp),
@@ -134,9 +146,8 @@ fun SettingsScreen(
                                     Text("Low Battery Threshold: ${batteryLowThreshold.toInt()}%", fontWeight = FontWeight.SemiBold)
                                     Slider(
                                         value = batteryLowThreshold,
-                                        onValueChange = { scope.launch { preferences.setBatteryLowThreshold(it) } },
-                                        valueRange = 0f..50f,
-                                        steps = 49
+                                        onValueChange = { scope.launch { preferences.setBatteryLowThreshold(kotlin.math.round(it)) } },
+                                        valueRange = 0f..50f
                                     )
 
                                     Spacer(modifier = Modifier.height(8.dp))
@@ -144,9 +155,8 @@ fun SettingsScreen(
                                     Text("High Battery Threshold: ${batteryHighThreshold.toInt()}%", fontWeight = FontWeight.SemiBold)
                                     Slider(
                                         value = batteryHighThreshold,
-                                        onValueChange = { scope.launch { preferences.setBatteryHighThreshold(it) } },
-                                        valueRange = 50f..100f,
-                                        steps = 49
+                                        onValueChange = { scope.launch { preferences.setBatteryHighThreshold(kotlin.math.round(it)) } },
+                                        valueRange = 50f..100f
                                     )
                                 }
                             }

@@ -20,11 +20,12 @@ fun IOSHeader(
     onBackClick: (() -> Unit)? = null,
     onSettingsClick: (() -> Unit)? = null
 ) {
-    TopAppBar(
+    // CenterAlignedTopAppBar mimics iOS style better
+    androidx.compose.material3.CenterAlignedTopAppBar(
         title = {
             Text(
                 text = title,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.SemiBold
             )
         },
         navigationIcon = {
@@ -47,8 +48,8 @@ fun IOSHeader(
                 }
             }
         },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.surface
+        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f) // Slightly transparent
         )
     )
 }

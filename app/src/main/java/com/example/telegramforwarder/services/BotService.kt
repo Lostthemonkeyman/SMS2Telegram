@@ -47,8 +47,14 @@ class BotService : Service() {
     private var batteryLowThreshold = 20f
     private var batteryHighThreshold = 90f
     private var isBatteryNotifyEnabled = false
+    private var isEnhancedBatteryAlertsEnabled = true
     private var hasNotifiedLow = false
     private var hasNotifiedHigh = false
+
+    // Enhanced Battery Logic State
+    private var lastReportedLevel = -1
+    private var lastReportTime = 0L
+    private var isCharging = false
 
     // Missed Call State
     private var isMissedCallEnabled = false
@@ -66,6 +72,9 @@ class BotService : Service() {
             if (intent.action == Intent.ACTION_BATTERY_CHANGED) {
                 val level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
                 val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
+                val status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
+                isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL
+
                 if (level != -1 && scale != -1) {
                     val pct = (level.toFloat() / scale.toFloat()) * 100f
                     handleBatteryLevel(pct)
@@ -147,7 +156,11 @@ class BotService : Service() {
     }
 
     private fun createNotification(): Notification {
-        val channel = NotificationChannel(CHANNEL_ID, "Bot Service", NotificationManager.IMPORTANCE_LOW)
+        val channel = NotificationChannel(CHANNEL_ID, "Bot Service", NotificationManager.IMPORTANCE_MIN).apply {
+            enableLights(false)
+            enableVibration(false)
+            setShowBadge(false)
+        }
         val manager = getSystemService(NotificationManager::class.java)
         manager.createNotificationChannel(channel)
 
@@ -155,6 +168,7 @@ class BotService : Service() {
             .setContentTitle("Telegram Forwarder Bot")
             .setContentText("Listening for commands and events...")
             .setSmallIcon(R.mipmap.ic_launcher)
+            .setPriority(NotificationCompat.PRIORITY_MIN)
             .build()
     }
 
@@ -179,6 +193,9 @@ class BotService : Service() {
             userPreferences.isBatteryNotifyEnabled.collect { isBatteryNotifyEnabled = it }
         }
         serviceScope.launch {
+            userPreferences.isEnhancedBatteryAlertsEnabled.collect { isEnhancedBatteryAlertsEnabled = it }
+        }
+        serviceScope.launch {
             userPreferences.isMissedCallEnabled.collect { isMissedCallEnabled = it }
         }
         serviceScope.launch {
@@ -189,25 +206,77 @@ class BotService : Service() {
     private fun handleBatteryLevel(pct: Float) {
         if (!isBatteryNotifyEnabled || botToken == null || chatId == null) return
 
-        // Check Low
-        if (pct <= batteryLowThreshold) {
-            if (!hasNotifiedLow) {
-                sendTelegramMessage("⚠️ <b>Battery Low:</b> ${pct.toInt()}%")
-                hasNotifiedLow = true
+        val currentLevel = pct.toInt()
+
+        if (isEnhancedBatteryAlertsEnabled) {
+            val now = System.currentTimeMillis()
+
+            if (isCharging) {
+                 // Charging logic
+                 val thresholds = listOf(90, 95, 100)
+
+                 // If we hit a threshold we haven't reported recently (or higher than last reported)
+
+                 if (currentLevel in thresholds && currentLevel > lastReportedLevel) {
+                     val text = if (currentLevel >= 95) {
+                         "🔋 <b>Battery Charged:</b> $currentLevel%\nIt is recommended to unplug."
+                     } else {
+                         "🔋 <b>Battery Charged:</b> $currentLevel%"
+                     }
+                     sendTelegramMessage(text)
+                     lastReportedLevel = currentLevel
+                     lastReportTime = now
+                 } else if (currentLevel == 100) {
+                     // Check for repetition
+                     if (now - lastReportTime >= 10 * 60 * 1000) { // 10 minutes
+                         sendTelegramMessage("🔋 <b>Battery Fully Charged:</b> 100%\nIt is recommended to unplug.")
+                         lastReportTime = now
+                     }
+                 }
+
+                 // If charging, we reset the discharge alert flags if necessary,
+                 // but here we just rely on lastReportedLevel.
+                 // If we unplug, isCharging becomes false.
+
+            } else {
+                // Discharging logic
+                // Notify at 20, 15, 10, 5
+
+                // If we are just starting to discharge from 100, lastReportedLevel is 100.
+
+                if (currentLevel != lastReportedLevel) {
+                     if (currentLevel == 20 || currentLevel == 15 || currentLevel == 10 || currentLevel == 5) {
+                         sendTelegramMessage("⚠️ <b>Battery Low:</b> $currentLevel%")
+                         lastReportedLevel = currentLevel
+                     }
+                }
             }
+
         } else {
-            hasNotifiedLow = false
+            // Standard Logic
+
+            // Check Low
+            if (pct <= batteryLowThreshold) {
+                if (!hasNotifiedLow) {
+                    sendTelegramMessage("⚠️ <b>Battery Low:</b> ${pct.toInt()}%")
+                    hasNotifiedLow = true
+                }
+            } else {
+                hasNotifiedLow = false
+            }
+
+            // Check High
+            if (pct >= batteryHighThreshold) {
+                if (!hasNotifiedHigh) {
+                    sendTelegramMessage("🔋 <b>Battery Charged:</b> ${pct.toInt()}%")
+                    hasNotifiedHigh = true
+                }
+            } else {
+                hasNotifiedHigh = false
+            }
         }
 
-        // Check High
-        if (pct >= batteryHighThreshold) {
-            if (!hasNotifiedHigh) {
-                sendTelegramMessage("🔋 <b>Battery Charged:</b> ${pct.toInt()}%")
-                hasNotifiedHigh = true
-            }
-        } else {
-            hasNotifiedHigh = false
-        }
+        lastBatteryLevel = currentLevel
     }
 
     private fun handleMissedCall(number: String) {
